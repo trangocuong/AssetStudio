@@ -18,10 +18,12 @@ jobs:
       - name: Setup MSBuild
         uses: microsoft/setup-msbuild@v1.1
 
-      - name: Setup .NET 6 SDK
+      - name: Setup .NET SDKs
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: 6.0.x
+          dotnet-version: |
+            8.0.x
+            9.0.x-preview
 
       - name: Download FBX SDK
         run: |
@@ -33,17 +35,17 @@ jobs:
           Start-Process -FilePath "fbxpdb.exe" -ArgumentList '/S' -Wait
           cd ..
 
-      - name: Restore NuGet packages (.NET Framework)
+      - name: Restore NuGet for net472
         run: nuget restore
 
-      - name: Restore .NET SDK-style projects
+      - name: Restore .NET SDK packages
         run: dotnet restore AssetStudioGUI/AssetStudioGUI.csproj
 
       - name: Build .NET Framework 4.7.2
         run: msbuild /p:Configuration=Release /p:TargetFramework=net472 /verbosity:minimal
 
-      - name: Build .NET 6.0
-        run: msbuild /t:AssetStudioGUI:publish /p:Configuration=Release /p:TargetFramework=net6.0-windows /p:SelfContained=false /verbosity:minimal
+      - name: Build .NET 8.0
+        run: msbuild /t:AssetStudioGUI:publish /p:Configuration=Release /p:TargetFramework=net8.0-windows /p:SelfContained=false /verbosity:minimal
 
       - name: Upload .NET Framework Artifact
         uses: actions/upload-artifact@v4
@@ -51,8 +53,8 @@ jobs:
           name: AssetStudio.net472
           path: AssetStudioGUI/bin/Release/net472
 
-      - name: Upload .NET 6 Artifact
+      - name: Upload .NET 8 Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: AssetStudio.net6
-          path: AssetStudioGUI/bin/Release/net6.0-windows/publish
+          name: AssetStudio.net8
+          path: AssetStudioGUI/bin/Release/net8.0-windows/publish
