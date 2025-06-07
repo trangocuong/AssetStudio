@@ -5,7 +5,6 @@ on:
     branches: [ master ]
   pull_request:
     branches: [ master ]
-
   workflow_dispatch:
 
 jobs:
@@ -13,44 +12,41 @@ jobs:
     runs-on: windows-latest
 
     steps:
-      - uses: actions/checkout@v4
-      - uses: microsoft/setup-msbuild@v1.1
-      
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v1.1
+
       - name: Download FBX SDK
         run: |
           md fbx
           cd fbx
           Invoke-WebRequest "https://damassets.autodesk.net/content/dam/autodesk/www/adn/fbx/2020-2-1/fbx202021_fbxsdk_vs2019_win.exe" -OutFile "fbxsdk.exe"
-          Start-Process -FilePath "fbxsdk.exe" /S -Wait
+          Start-Process -FilePath "fbxsdk.exe" -ArgumentList '/S' -Wait
           Invoke-WebRequest "https://damassets.autodesk.net/content/dam/autodesk/www/adn/fbx/2020-2-1/fbx202021_fbxsdk_vs2019_pdbs.exe" -OutFile "fbxpdb.exe"
-          Start-Process -FilePath "fbxpdb.exe" /S -Wait
+          Start-Process -FilePath "fbxpdb.exe" -ArgumentList '/S' -Wait
           cd ..
 
-      - name: Nuget Restore
+      - name: Restore NuGet packages (.NET Framework)
         run: nuget restore
-      
-      - name: Build .Net472
+
+      - name: Restore .NET SDK-style projects
+        run: dotnet restore AssetStudioGUI/AssetStudioGUI.csproj
+
+      - name: Build .NET Framework 4.7.2
         run: msbuild /p:Configuration=Release /p:TargetFramework=net472 /verbosity:minimal
 
-      - name: Build .Net5
-        run: msbuild /t:AssetStudioGUI:publish /p:Configuration=Release /p:TargetFramework=net5.0-windows /p:SelfContained=false /verbosity:minimal
-
-      - name: Build .Net6
+      - name: Build .NET 6.0
         run: msbuild /t:AssetStudioGUI:publish /p:Configuration=Release /p:TargetFramework=net6.0-windows /p:SelfContained=false /verbosity:minimal
 
-      - name: Upload .Net472 Artifact
+      - name: Upload .NET Framework Artifact
         uses: actions/upload-artifact@v4
         with:
           name: AssetStudio.net472
           path: AssetStudioGUI/bin/Release/net472
 
-      - name: Upload .Net5 Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: AssetStudio.net5
-          path: AssetStudioGUI/bin/Release/net5.0-windows/publish
-
-      - name: Upload .Net6 Artifact
+      - name: Upload .NET 6 Artifact
         uses: actions/upload-artifact@v4
         with:
           name: AssetStudio.net6
