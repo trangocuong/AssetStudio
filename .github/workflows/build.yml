@@ -1,4 +1,4 @@
-name: AssetStudioBuild
+name: Build AssetStudio
 
 on:
   push:
@@ -12,49 +12,46 @@ jobs:
     runs-on: windows-latest
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+      - uses: microsoft/setup-msbuild@v1.1
+      - uses: nuget/setup-nuget@v1
+      - run: nuget restore
 
-      - name: Setup MSBuild
-        uses: microsoft/setup-msbuild@v1.1
+      - name: Build net472
+        run: msbuild AssetStudioGUI/AssetStudioGUI.csproj /p:Configuration=Release /p:TargetFramework=net472
 
-      - name: Setup .NET SDKs
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: |
-            8.0.x
-            9.0.x-preview
+      - name: Publish net8 self-contained x64
+        run: msbuild AssetStudioGUI/AssetStudioGUI.csproj /t:AssetStudioGUI:Publish /p:Configuration=Release /p:TargetFramework=net8.0-windows /p:RuntimeIdentifier=win-x64 /p:SelfContained=true
 
-      - name: Download FBX SDK
-        run: |
-          md fbx
-          cd fbx
-          Invoke-WebRequest "https://damassets.autodesk.net/content/dam/autodesk/www/adn/fbx/2020-2-1/fbx202021_fbxsdk_vs2019_win.exe" -OutFile "fbxsdk.exe"
-          Start-Process -FilePath "fbxsdk.exe" -ArgumentList '/S' -Wait
-          Invoke-WebRequest "https://damassets.autodesk.net/content/dam/autodesk/www/adn/fbx/2020-2-1/fbx202021_fbxsdk_vs2019_pdbs.exe" -OutFile "fbxpdb.exe"
-          Start-Process -FilePath "fbxpdb.exe" -ArgumentList '/S' -Wait
-          cd ..
+      - name: Publish net9 self-contained x64
+        run: msbuild AssetStudioGUI/AssetStudioGUI.csproj /t:AssetStudioGUI:Publish /p:Configuration=Release /p:TargetFramework=net9.0-windows /p:RuntimeIdentifier=win-x64 /p:SelfContained=true
 
-      - name: Restore NuGet for net472
-        run: nuget restore
+      - name: Zip net472
+        run: Compress-Archive -Path AssetStudioGUI\bin\Release\net472\* -DestinationPath AssetStudio_net472.zip
+        shell: pwsh
 
-      - name: Restore .NET SDK packages
-        run: dotnet restore AssetStudioGUI/AssetStudioGUI.csproj
+      - name: Zip net8 self-contained
+        run: Compress-Archive -Path AssetStudioGUI\bin\Release\net8.0-windows\win-x64\publish\* -DestinationPath AssetStudio_net8_sc.zip
+        shell: pwsh
 
-      - name: Build .NET Framework 4.7.2
-        run: msbuild /p:Configuration=Release /p:TargetFramework=net472 /verbosity:minimal
+      - name: Zip net9 self-contained
+        run: Compress-Archive -Path AssetStudioGUI\bin\Release\net9.0-windows\win-x64\publish\* -DestinationPath AssetStudio_net9_sc.zip
+        shell: pwsh
 
-      - name: Build .NET 8.0
-        run: msbuild /t:AssetStudioGUI:publish /p:Configuration=Release /p:TargetFramework=net8.0-windows /p:SelfContained=false /verbosity:minimal
-
-      - name: Upload .NET Framework Artifact
+      - name: Upload net472
         uses: actions/upload-artifact@v4
         with:
           name: AssetStudio.net472
-          path: AssetStudioGUI/bin/Release/net472
+          path: AssetStudio_net472.zip
 
-      - name: Upload .NET 8 Artifact
+      - name: Upload net8 self-contained
         uses: actions/upload-artifact@v4
         with:
-          name: AssetStudio.net8
-          path: AssetStudioGUI/bin/Release/net8.0-windows/publish
+          name: AssetStudio.net8.selfcontained.x64
+          path: AssetStudio_net8_sc.zip
+
+      - name: Upload net9 self-contained
+        uses: actions/upload-artifact@v4
+        with:
+          name: AssetStudio.net9.selfcontained.x64
+          path: AssetStudio_net9_sc.zip
