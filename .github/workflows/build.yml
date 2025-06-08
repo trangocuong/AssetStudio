@@ -15,15 +15,22 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup MSBuild
-        uses: microsoft/setup-msbuild@v1.1
-
-      - name: Setup .NET SDKs
+      - name: Setup .NET SDK
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: |
-            8.0.x
-            9.0.x-preview
+          dotnet-version: '8.0.x'
+
+      - name: Setup NuGet
+        uses: nuget/setup-nuget@v1
+
+      - name: Configure NuGet sources
+        run: nuget sources Add -Name nuget.org -Source https://api.nuget.org/v3/index.json
+
+      - name: Restore NuGet packages
+        run: nuget restore AssetStudioGUI/AssetStudioGUI.csproj
+
+      - name: Restore .NET SDK packages
+        run: dotnet restore AssetStudioGUI/AssetStudioGUI.csproj
 
       - name: Download FBX SDK
         run: |
@@ -35,15 +42,8 @@ jobs:
           Start-Process -FilePath "fbxpdb.exe" -ArgumentList '/S' -Wait
           cd ..
 
-      - name: Restore .NET SDK packages
-        run: dotnet restore AssetStudioGUI/AssetStudioGUI.csproj
-
-      # Bỏ build net472 nếu không cần
-      # - name: Build .NET Framework 4.7.2
-      #   run: msbuild /p:Configuration=Release /p:TargetFramework=net472 /verbosity:minimal
-
       - name: Publish .NET 8.0 app
-        run: msbuild AssetStudioGUI/AssetStudioGUI.csproj /t:Publish /p:Configuration=Release /p:TargetFramework=net8.0-windows /p:SelfContained=false /verbosity:minimal
+        run: dotnet publish AssetStudioGUI/AssetStudioGUI.csproj -c Release -f net8.0-windows --no-self-contained -v minimal
 
       - name: Upload .NET 8 Artifact
         uses: actions/upload-artifact@v4
