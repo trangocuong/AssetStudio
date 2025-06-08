@@ -17,28 +17,28 @@ jobs:
       - uses: nuget/setup-nuget@v1
       - run: nuget restore
 
-      - name: Publish net8 self-contained x64
-        run: msbuild AssetStudioGUI/AssetStudioGUI.csproj /t:AssetStudioGUI:Publish /p:Configuration=Release /p:TargetFramework=net8.0-windows /p:RuntimeIdentifier=win-x64 /p:SelfContained=true
+      - name: Publish net8 framework-dependent
+        run: msbuild AssetStudioGUI/AssetStudioGUI.csproj /t:Publish /p:Configuration=Release /p:TargetFramework=net8.0-windows /p:SelfContained=false /p:PublishSingleFile=false
 
-      - name: Publish net9 self-contained x64
-        run: msbuild AssetStudioGUI/AssetStudioGUI.csproj /t:AssetStudioGUI:Publish /p:Configuration=Release /p:TargetFramework=net9.0-windows /p:RuntimeIdentifier=win-x64 /p:SelfContained=true
+      - name: Publish net9 framework-dependent
+        run: msbuild AssetStudioGUI/AssetStudioGUI.csproj /t:Publish /p:Configuration=Release /p:TargetFramework=net9.0-windows /p:SelfContained=false /p:PublishSingleFile=false
 
-      - name: Zip net8 self-contained
-        run: Compress-Archive -Path AssetStudioGUI\bin\Release\net8.0-windows\win-x64\publish\* -DestinationPath AssetStudio_net8_sc.zip
+      - name: Zip net8 publish
+        run: Compress-Archive -Path AssetStudioGUI\bin\Release\net8.0-windows\publish\* -DestinationPath AssetStudio_net8.zip
         shell: pwsh
 
-      - name: Zip net9 self-contained
-        run: Compress-Archive -Path AssetStudioGUI\bin\Release\net9.0-windows\win-x64\publish\* -DestinationPath AssetStudio_net9_sc.zip
+      - name: Zip net9 publish
+        run: Compress-Archive -Path AssetStudioGUI\bin\Release\net9.0-windows\publish\* -DestinationPath AssetStudio_net9.zip
         shell: pwsh
 
-      - name: Upload net8 self-contained
+      - name: Upload net8 artifact
         uses: actions/upload-artifact@v4
         with:
-          name: AssetStudio.net8.selfcontained.x64
-          path: AssetStudio_net8_sc.zip
+          name: AssetStudio.net8
+          path: AssetStudio_net8.zip
 
-      - name: Upload net9 self-contained
+      - name: Upload net9 artifact
         uses: actions/upload-artifact@v4
         with:
-          name: AssetStudio.net9.selfcontained.x64
-          path: AssetStudio_net9_sc.zip
+          name: AssetStudio.net9
+          path: AssetStudio_net9.zip
