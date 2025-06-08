@@ -24,7 +24,7 @@ jobs:
         uses: nuget/setup-nuget@v1
 
       - name: Restore NuGet packages
-        run: nuget restore AssetStudioGUI/AssetStudioGUI.csproj
+        run: nuget restore AssetStudio.sln
 
       - name: Restore .NET SDK packages
         run: dotnet restore AssetStudioGUI/AssetStudioGUI.csproj
@@ -38,6 +38,13 @@ jobs:
           Invoke-WebRequest "https://damassets.autodesk.net/content/dam/autodesk/www/adn/fbx/2020-2-1/fbx202021_fbxsdk_vs2019_pdbs.exe" -OutFile "fbxpdb.exe"
           Start-Process -FilePath "fbxpdb.exe" -ArgumentList '/S' -Wait
           cd ..
+
+      - name: Build Native Projects
+        run: |
+          msbuild Texture2DDecoderNative/Texture2DDecoderNative.vcxproj /p:Configuration=Release /p:Platform=Win32
+          msbuild Texture2DDecoderNative/Texture2DDecoderNative.vcxproj /p:Configuration=Release /p:Platform=x64
+          msbuild AssetStudioFBXNative/AssetStudioFBXNative.vcxproj /p:Configuration=Release /p:Platform=Win32
+          msbuild AssetStudioFBXNative/AssetStudioFBXNative.vcxproj /p:Configuration=Release /p:Platform=x64
 
       - name: Publish .NET 8.0 app
         run: dotnet publish AssetStudioGUI/AssetStudioGUI.csproj -c Release -f net8.0-windows --no-self-contained -v minimal
