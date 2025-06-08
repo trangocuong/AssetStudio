@@ -17,18 +17,11 @@ jobs:
       - uses: nuget/setup-nuget@v1
       - run: nuget restore
 
-      - name: Build net472
-        run: msbuild AssetStudioGUI/AssetStudioGUI.csproj /p:Configuration=Release /p:TargetFramework=net472
-
       - name: Publish net8 self-contained x64
         run: msbuild AssetStudioGUI/AssetStudioGUI.csproj /t:AssetStudioGUI:Publish /p:Configuration=Release /p:TargetFramework=net8.0-windows /p:RuntimeIdentifier=win-x64 /p:SelfContained=true
 
       - name: Publish net9 self-contained x64
         run: msbuild AssetStudioGUI/AssetStudioGUI.csproj /t:AssetStudioGUI:Publish /p:Configuration=Release /p:TargetFramework=net9.0-windows /p:RuntimeIdentifier=win-x64 /p:SelfContained=true
-
-      - name: Zip net472
-        run: Compress-Archive -Path AssetStudioGUI\bin\Release\net472\* -DestinationPath AssetStudio_net472.zip
-        shell: pwsh
 
       - name: Zip net8 self-contained
         run: Compress-Archive -Path AssetStudioGUI\bin\Release\net8.0-windows\win-x64\publish\* -DestinationPath AssetStudio_net8_sc.zip
@@ -37,12 +30,6 @@ jobs:
       - name: Zip net9 self-contained
         run: Compress-Archive -Path AssetStudioGUI\bin\Release\net9.0-windows\win-x64\publish\* -DestinationPath AssetStudio_net9_sc.zip
         shell: pwsh
-
-      - name: Upload net472
-        uses: actions/upload-artifact@v4
-        with:
-          name: AssetStudio.net472
-          path: AssetStudio_net472.zip
 
       - name: Upload net8 self-contained
         uses: actions/upload-artifact@v4
